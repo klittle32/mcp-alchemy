@@ -113,7 +113,7 @@ def get_db_info():
 
 VERSION = "2025.8.15.91819"
 DB_INFO = get_db_info()
-EXECUTE_QUERY_MAX_CHARS = int(os.environ.get('EXECUTE_QUERY_MAX_CHARS', 20000))
+EXECUTE_QUERY_MAX_CHARS = int(os.environ.get('EXECUTE_QUERY_MAX_CHARS', 4000))
 CLAUDE_LOCAL_FILES_PATH = os.environ.get('CLAUDE_LOCAL_FILES_PATH')
 
 ### MCP ###
