@@ -6,7 +6,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "fastmcp==2.14.5",
-    "mcp[cli]>=1.2.0rc1",
+    "hatchling>=1.28.0",
+    "mcp[cli]>=1.26.0",
     "pyodbc>=5.3.0",
     "sqlalchemy>=2.0.46",
 ]
@@ -31,7 +32,7 @@ Issues = "https://github.com/runekaagaard/mcp-alchemy/issues"
 Disussions = "https://github.com/runekaagaard/mcp-alchemy/discussions"
 
 [build-system]
-requires = ["hatchling>=1.27"]
+requires = ["hatchling>=1.28.0"]
 build-backend = "hatchling.build"
 
 [tool.uv]
@@ -39,6 +40,6 @@ package = true
 
 [dependency-groups]
 dev = [
-    "build>=1.2.2.post1",
-    "hatchling>=1.27.0",
+    "build>=1.4.0",
+    "hatchling>=1.28.0",
 ]
