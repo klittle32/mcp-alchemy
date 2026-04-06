@@ -34,6 +34,8 @@ The entire server is three files:
 
 - **`tests/test.py`** -- Imports `*` from `mcp_alchemy.server` and tests against a SQLite Chinook database. Expected outputs are string constants compared with exact string equality.
 
+`docs/solutions/` contains documented solutions to past problems, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Relevant when debugging or upgrading dependencies.
+
 ## Key Design Details
 
 - The server uses **FastMCP** (not raw MCP SDK) to register tools via `@mcp.tool()` decorators.
@@ -41,10 +43,6 @@ The entire server is three files:
 - Query results use a vertical format (one field per line) with smart truncation at `EXECUTE_QUERY_MAX_CHARS` (default 4000).
 - Optional `CLAUDE_LOCAL_FILES_PATH` integration saves full result sets as JSON files for large dataset analysis.
 - The entry point is `mcp-alchemy` (defined in `[project.scripts]`), which calls `mcp_alchemy.server:main`.
-
-## Known Issues
-
-- **Windows stdio 100% CPU bug**: The MCP Python SDK's `anyio.wrap_file()` on Windows stdin polls in a tight loop instead of blocking. This is an upstream issue in the `mcp` SDK package, not in this project. See `docs/bugs/WINDOWS_STDIO_100CPU_BUSY_WAIT.md`.
 
 ## Environment Variables
 

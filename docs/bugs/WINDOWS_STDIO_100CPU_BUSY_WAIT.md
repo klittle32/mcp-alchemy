@@ -1,9 +1,10 @@
 # Bug Report: MCP Python SDK Windows Stdio Transport 100% CPU Busy-Wait on Idle
 
-Status: Diagnosed (Root Cause Identified)
+Status: Resolved (no longer reproducible after FastMCP 3.1.1 upgrade)
 Platform: Windows 11 Pro 10.0.26200
 Severity: High - Impacts all Windows MCP servers using stdio transport
-Packages: mcp==1.25.0, fastmcp==2.14.2, Python 3.12.12
+Packages (original): mcp==1.25.0, fastmcp==2.14.2, Python 3.12.12
+Packages (resolved): mcp==1.26.0, fastmcp==3.1.1, Python 3.12.12
 
 ## Executive Summary
 
@@ -184,9 +185,23 @@ Alternatively, a monkey-patch can be added to `mcp_alchemy/server.py` before `mc
 - Repository: https://github.com/modelcontextprotocol/python-sdk
 - The fix should be submitted there as a PR or issue
 
+## Resolution (2026-04-06)
+
+After upgrading from `fastmcp==2.14.5` to `fastmcp==3.1.1`, the 100% CPU busy-wait is no longer reproducible. Four `mcp-alchemy` processes were observed running for ~15 minutes via Claude Desktop with 0.0-0.5% CPU usage, compared to ~100% per process previously.
+
+**What changed:** The `mcp` SDK remains at v1.26.0 and `anyio` at v4.7.0 -- the `stdio_server()` code in `mcp/server/stdio.py` is unchanged. The fix likely came from a transitive dependency shift during the FastMCP 3.x upgrade. New dependencies introduced include `aiofile==3.9.0`, `caio==0.9.25` (C-based async I/O), and `watchfiles==1.1.1`. Several older dependencies were dropped (`diskcache`, `fakeredis`, `croniter`, `shellingham`, `typer`, among others). The exact mechanism is unconfirmed, but the symptom is definitively resolved.
+
+**Verification data:**
+```
+PID 60252: 0.0s CPU over 886s = 0.0% CPU  (venv python, -m mcp_alchemy.server)
+PID 5840:  4.3s CPU over 886s = 0.5% CPU  (uv python, -m mcp_alchemy.server)
+PID 46792: 0.1s CPU over 886s = 0.0% CPU  (uv cached entry point)
+PID 35536: 4.2s CPU over 886s = 0.5% CPU  (uv cached entry point)
+```
+
 ---
 
-Document Version: 2.0
+Document Version: 3.0
 Created: 2026-04-06
 Last Updated: 2026-04-06
 Analysis: Based on direct code inspection and live process observation
