@@ -170,3 +170,6 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 .aider*
+
+# Byterover - ignore .brv directory if using their sync service
+.brv/
