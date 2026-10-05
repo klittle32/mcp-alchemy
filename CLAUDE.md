@@ -9,11 +9,8 @@ MCP Alchemy is a Model Context Protocol (MCP) server that connects LLM clients (
 ## Commands
 
 ```bash
-# Install dependencies
+# Install dependencies (includes pymssql and pyodbc for SQL Server)
 uv sync
-
-# Install a database driver (e.g., for SQL Server)
-uv pip install pymssql
 
 # Run the MCP server locally
 uv run -m mcp_alchemy.server main

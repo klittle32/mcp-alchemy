@@ -2,10 +2,13 @@ from sqlalchemy import text
 
 def get_table_properties(connection, table_name, schema_name='dbo'):
     """Fetches extended properties for BOTH the table and its columns."""
+    if connection.dialect.name != 'mssql':
+        return {}
     sql = text("""
         SELECT 
-            CASE WHEN col.name IS NULL THEN 'TABLE_DESCRIPTION' ELSE col.name END AS column_name, 
-            ep.value AS description
+            CASE WHEN col.name IS NULL THEN 'TABLE_DESCRIPTION' ELSE col.name END AS column_name,
+            -- ep.value is sql_variant, which pymssql returns as bytes; cast so every driver returns text
+            CAST(ep.value AS nvarchar(max)) AS description
         FROM sys.extended_properties AS ep
         JOIN sys.objects AS obj ON ep.major_id = obj.object_id
         JOIN sys.schemas AS s ON obj.schema_id = s.schema_id
@@ -21,9 +24,11 @@ def get_table_properties(connection, table_name, schema_name='dbo'):
 
 def get_documented_procedures(connection):
     """Fetches only stored procedures that have an extended property description."""
+    if connection.dialect.name != 'mssql':
+        return {}
     sql = text("""
                SELECT s.name + '.' + p.name AS full_name,
-                      ep.value              AS description,
+                      CAST(ep.value AS nvarchar(max)) AS description,
                       par.name              AS param_name,
                       typ.name              AS param_type
                FROM sys.procedures p
