@@ -1,16 +1,15 @@
-import shutil, os, difflib, sys
+import shutil, os, difflib, sys, re
 
 from mcp_alchemy.server import *
 
 d = dict
 
-GDI1 = """
-Connected to sqlite version 3.37.2 database tests/Chinook_Sqlite.sqlite.
-"""
+# The SQLite version comes from the local Python build, so match any version.
+GDI1 = re.compile(r"Connected to sqlite version \d+(\.\d+)* database tests/Chinook_Sqlite\.sqlite\.")
 
-ATN1 = "Album, Artist, Customer, Employee, Genre, Invoice, InvoiceLine, MediaType, Playlist, PlaylistTrack, Track"
+ATN1 = "Tables: Album, Artist, Customer, Employee, Genre, Invoice, InvoiceLine, MediaType, Playlist, PlaylistTrack, Track"
 
-FTN1 = "MediaType, Playlist, PlaylistTrack, Track"
+FTN1 = "Tables: MediaType, Playlist, PlaylistTrack, Track"
 
 SD1 = """
 Customer:
@@ -30,6 +29,7 @@ Customer:
 
     Relationships:
       SupportRepId -> Employee.EmployeeId
+
 Track:
     TrackId: primary key, INTEGER, primary_key=1
     Name: NVARCHAR(200)
@@ -339,24 +339,36 @@ def diff(wanted_result, actual_result):
 
     return ''.join(line.replace('\n', '') + '\n' for line in diff_lines)
 
+FAILURES = []
+
 def test_func(func, tests):
+    """Run tests, recording failures instead of exiting so every failure is reported.
+
+    wanted_result is either a string (exact match after strip) or a compiled regex (fullmatch).
+    """
     for args, wanted_result in tests:
-        wanted_result = wanted_result.strip()
         actual_result = func(*args)
-        if actual_result != wanted_result:
-            print(f"{func.__name__}({args})")
-            h1("Wanted result")
-            print(wanted_result)
-            h1("Actual result")
-            print(actual_result)
-            h1("Diff")
-            print(diff(wanted_result, actual_result))
-            sys.exit(1)
+        if isinstance(wanted_result, re.Pattern):
+            if wanted_result.fullmatch(actual_result):
+                continue
+            wanted_result = wanted_result.pattern
+        else:
+            wanted_result = wanted_result.strip()
+            if actual_result == wanted_result:
+                continue
+        FAILURES.append(f"{func.__name__}({args})")
+        print(f"FAIL: {func.__name__}({args})")
+        h1("Wanted result")
+        print(wanted_result)
+        h1("Actual result")
+        print(actual_result)
+        h1("Diff")
+        print(diff(wanted_result, actual_result))
 
 def main():
     test_func(get_db_info, [([], GDI1)])
-    test_func(all_table_names, [([], ATN1)])
-    test_func(filter_table_names, [(["a"], FTN1)])
+    test_func(list_database_resources, [([], ATN1)])
+    test_func(filter_database_resources, [(["a"], FTN1)])
     test_func(schema_definitions, [([["Customer", "Track"]], SD1)])
     test_func(execute_query, [
         (["SELECT * FROM Album LIMIT 2"], EQ1),
@@ -386,6 +398,13 @@ def main():
         (["SELECT * FROM Customer"], EQ2B),
     ])
     shutil.rmtree(tmp)
+
+    if FAILURES:
+        print(f"{len(FAILURES)} test(s) failed:")
+        for name in FAILURES:
+            print(f"  {name}")
+        sys.exit(1)
+    print("All tests passed.")
 
 if __name__ == "__main__":
     main()
